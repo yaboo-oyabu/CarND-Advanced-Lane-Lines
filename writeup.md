@@ -45,61 +45,48 @@ You're reading it!
 
 #### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the section 1 and 2 of the IPython notebook located in "./P2.ipynb". There are two functions: `compute_camera_calibration` and `apply_undistortion`. `compute_camera_calibration` estimates `camera_matrix` and `dist_coeffs` from chessboard images, and `apply_undistortion` undistors an input image with `cv2.undistort` which requires `camera_matrix` and `dist_coeffs`.
+The code for this step is contained in the first section of "Camera Calibration" of the IPython notebook located in "./P2.ipynb". There are two functions: `compute_camera_calibration()` and `apply_undistortion()`. `compute_camera_calibration()` estimates `camera_matrix` and `dist_coeffs` from chessboard images, and `apply_undistortion` undistors an input image with `cv2.undistort` which requires `camera_matrix` and `dist_coeffs`.
 
-In the above process, the estimatiion of `camera_matrix` and `dist_coeffs` is the most important because it determines the performance of undistortion. To estimate these parameters, `objpoints` and `imgpoints` are needed. `objpoints` is a list of `objp`, which is array of the (x, y, z) coordinates of the chessboard corners in the calibration pattern coordinate space. Here, z is set to 0 because I am assuming the chessboard is fixed on the (x, y) plane. `imgpoints` is a list of `imgp`, which is array of (x, y) coordinates of chessboard corners in chessboard images. Here, chessboard corners are detected by `cv2.findChessboardCorners`. After preparing `objpoints` and `imgpoints`, I estimate `camera_matrix` and `dist_coeffs` with `cv2.calibrateCamera`.
+In the above process, the estimatiion of `camera_matrix` and `dist_coeffs` is the most important because it determines the performance of undistortion. To estimate these parameters, `objpoints` and `imgpoints` are needed. `objpoints` is a list of `objp`, which is array of the (x, y, z) coordinates of the chessboard corners in the calibration pattern coordinate space. Here, z is set to 0 because I am assuming the chessboard is fixed on the (x, y) plane. `imgpoints` is a list of `imgp`, which is array of (x, y) coordinates of chessboard corners in chessboard images. Here, chessboard corners are detected by `cv2.findChessboardCorners()`. After preparing `objpoints` and `imgpoints`, I estimate `camera_matrix` and `dist_coeffs` with `cv2.calibrateCamera()`.
 
-The following image shows how a chessboard image is undistorted by `apply_undistortion` with estimated `camera_matrix` and `dist_coeffs`:
+The following image shows how a chessboard image is undistorted by `apply_undistortion()` with estimated `camera_matrix` and `dist_coeffs`:
 
 ![alt text][image1-0]
 
 ### Pipeline (single images)
 
+Pipeline is defined in "Pipeline" section of the IPython notebook located in "./P2.ipynb". The index of following sub-section corresponds to the sub-sections of "Pipeline" of the IPython notebook. 
+
 #### 1. Provide an example of a distortion-corrected image.
 
-To demonstrate the distortion-correction step, I correct the distortion of the images which located in `test_images/straight_lines2.jpg`. I applied `apply_undistortion` to this image and get the following result. In the follwing result, the left image is the input to `apply_undistortion` and the right image is the output. You can see the red car in the right image is streched horizontally compared to the left.
+To demonstrate the distortion-correction step, I correct the distortion of the images which located in `test_images/straight_lines2.jpg`. I applied `apply_undistortion()` to this image and get the following result. In the follwing result, the left image is the input to `apply_undistortion()` and the right image is the output. You can see the red car in the right image is streched horizontally compared to the left.
 
 ![alt_text][image1-2]
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-In this step, `apply_binary_transformation_with_thresholds`, which is defined in the section 3 of the IPython notebook located in "./P2.ipynb", is used to create a thresholded binary image. I used a combination of gradient and color thresholds to generate a binary image. The gradient threshold is applied to the gray-scale image which is the output of `cv2.Sobel`. This calculates x derivatives of an input image. The color threshold is applied to the HLS color image which is converted from an input image by `cv2.cvtColor`. Here is an example of a thresholded binary image converted by `apply_binary_transformation_with_thresholds`.
+In this step, `apply_binary_transformation_with_thresholds()` is used to create a thresholded binary image. I used a combination of gradient and color thresholds to generate a binary image. The gradient threshold is applied to the gray-scale image which is the output of `cv2.Sobel()`. This calculates x derivatives of an input image. The color threshold is applied to the HLS color image which is converted from an input image by `cv2.cvtColor()`. Here is an example of a thresholded binary image converted by `apply_binary_transformation_with_thresholds()`.
 
 ![alt text][image2]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
-
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
+In this step, `apply_perspective_transform()` is used to apply a perspective transform to an input image. This function takes a transform matrix which is calculated by `calculate_perspective_transform_matrix()`. To obtain a transform matrix, I used `cv2.getPerspectiveTransform()` and input source (`src`) and destination (`dst`) points to that function. I chose the hardcode the source and destination points as follows.
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+| 203, 720      | 320, 0        | 
+| 581, 460      | 320, 720      |
+| 703, 460      | 960, 720      |
+| 1110, 720     | 960, 0        |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
 
-![alt text][image4]
+![alt text][image3]
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+In this step, `fit_polynomial` takes left points (`leftx` and `lefty`) and right points (`rightx` and `righty`) to estimate second order polynomials for left and right lane. These points are extracted by `find_lane_pixels()` which has important steps to separate left and right points without outliars. In the first step, I calculate `midpoint` of the lane based on left and right peaks of the `histogram`, and use it to split points to left and right groups. Then, outliars are removed from each group by using sliding window technique. Since this function is slow due to it's computational complexity, I also define `search_around_poly()` which reuse previously calcuated coefficients of second order polynomials to reduce the computational complexity for the extraction of left and right points. 
 
 ![alt text][image5]
 
@@ -119,7 +106,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output_videos/project_video.mp4)
 
 ---
 
