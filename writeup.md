@@ -1,9 +1,3 @@
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
----
-
 **Advanced Lane Finding Project**
 
 The goals / steps of this project are the following:
@@ -19,27 +13,12 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1-0]: ./output_images/undistort_output_checkboard.png "Undistortion 0"
-[image1-1]: ./output_images/undistort_output_0.png "Undistortion 1"
-[image1-2]: ./output_images/undistort_output_1.png "Undistortion 2"
-[image2]: ./output_images/binary_output_1.png "Binary Threshold 2"
-[image3]: ./output_images/ptransform_output_1.png "PTransform 2"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
-
-## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
-
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
----
-
-### Writeup / README
-
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
-
-You're reading it!
+[imageC]: ./output_images/undistort_output_checkboard.png "Camera Calibration"
+[image1]: ./output_images/undistort_output_0.png "Undistortion"
+[image2]: ./output_images/binary_output_0.png "Binary Threshold"
+[image3]: ./output_images/ptransform_output_0.png "PTransform"
+[image4]: ./output_images/lane_output_0.png "Warp Example"
+[image6]: ./output_images/overlay_output_0.png "Fit Visual"
 
 ### Camera Calibration
 
@@ -51,27 +30,24 @@ In the above process, the estimatiion of `camera_matrix` and `dist_coeffs` is th
 
 The following image shows how a chessboard image is undistorted by `apply_undistortion()` with estimated `camera_matrix` and `dist_coeffs`:
 
-![alt text][image1-0]
+![alt text][imageC]
 
 ### Pipeline (single images)
-
-Pipeline is defined in "Pipeline" section of the IPython notebook located in "./P2.ipynb". The index of following sub-section corresponds to the sub-sections of "Pipeline" of the IPython notebook. 
-
 #### 1. Provide an example of a distortion-corrected image.
 
-To demonstrate the distortion-correction step, I correct the distortion of the images which located in `test_images/straight_lines2.jpg`. I applied `apply_undistortion()` to this image and get the following result. In the follwing result, the left image is the input to `apply_undistortion()` and the right image is the output. You can see the red car in the right image is streched horizontally compared to the left.
+This step is implemented in the first sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". To demonstrate the distortion-correction step, I correct the distortion of the images which located in `test_images/straight_lines2.jpg`. I applied `apply_undistortion()` to this image and get the following result. In the follwing result, the left image is the input to `apply_undistortion()` and the right image is the output. You can see the red car in the right image is streched horizontally compared to the left.
 
-![alt_text][image1-2]
+![alt_text][image1]
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-In this step, `apply_binary_transformation_with_thresholds()` is used to create a thresholded binary image. I used a combination of gradient and color thresholds to generate a binary image. The gradient threshold is applied to the gray-scale image which is the output of `cv2.Sobel()`. This calculates x derivatives of an input image. The color threshold is applied to the HLS color image which is converted from an input image by `cv2.cvtColor()`. Here is an example of a thresholded binary image converted by `apply_binary_transformation_with_thresholds()`.
+This step is implemented in the second sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `apply_binary_transformation_with_thresholds()` is used to create a thresholded binary image. I used a combination of gradient and color thresholds to generate a binary image. The gradient threshold is applied to the gray-scale image which is the output of `cv2.Sobel()`. This calculates x derivatives of an input image. The color threshold is applied to the HLS color image which is converted from an input image by `cv2.cvtColor()`. Here is an example of a thresholded binary image converted by `apply_binary_transformation_with_thresholds()`.
 
 ![alt text][image2]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-In this step, `apply_perspective_transform()` is used to apply a perspective transform to an input image. This function takes a transform matrix which is calculated by `calculate_perspective_transform_matrix()`. To obtain a transform matrix, I used `cv2.getPerspectiveTransform()` and input source (`src`) and destination (`dst`) points to that function. I chose the hardcode the source and destination points as follows.
+This step is implemented in the third sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `apply_perspective_transform()` is used to apply a perspective transform to an input image. This function takes a transform matrix which is calculated by `calculate_perspective_transform_matrix()`. To obtain a transform matrix, I used `cv2.getPerspectiveTransform()` and input source (`src`) and destination (`dst`) points to that function. I chose the hardcode the source and destination points as follows.
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
@@ -86,17 +62,31 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-In this step, `fit_polynomial` takes left points (`leftx` and `lefty`) and right points (`rightx` and `righty`) to estimate second order polynomials for left and right lane. These points are extracted by `find_lane_pixels()` which has important steps to separate left and right points without outliars. In the first step, I calculate `midpoint` of the lane based on left and right peaks of the `histogram`, and use it to split points to left and right groups. Then, outliars are removed from each group by using sliding window technique. Since this function is slow due to it's computational complexity, I also define `search_around_poly()` which reuse previously calcuated coefficients of second order polynomials to reduce the computational complexity for the extraction of left and right points. 
+This step is implemented in the forth sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `fit_polynomial` takes left points (`leftx` and `lefty`) and right points (`rightx` and `righty`) to estimate second order polynomials for left and right lane. These points are extracted by `find_lane_pixels()` which has important steps to separate left and right points without outliars. In the first step, I calculate `midpoint` of the lane based on left and right peaks of the `histogram`, and use it to split points to left and right groups. Then, outliars are removed from each group by using sliding window technique. Since this function is slow due to it's computational complexity, I also define `search_around_poly()` which reuse previously calcuated coefficients of second order polynomials to reduce the computational complexity for the extraction of left and right points. 
 
-![alt text][image5]
+![alt text][image4]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+This step is implemented in the fifth sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `measure_curvature_and_position()` returns the radius of curvature of the lane with `measure_curvature()`, and the position of the vehicle with respect to center with `measure_position()`. 
+
+`measure_curvature()` uses the following formula to calcute the radius of curvature $R_{curve}$. Here $A$ and $B$ are first and second order coefficients of the fitted lane line respectively, and $y$ is y coordinate of the vehicle in the image. Since the image is camera view, $y$ is set to the height of the image. 
+
+$$
+R_{curve} = \frac{(1 + (2Ay + B)^2)^{\frac{3}{2}}}{|2A|}
+$$
+
+`measure_position()` uses the following equation to calculate the the position of the vehicle with respect to center $D_{center}$. Here $x_{left}$ and $x_{right}$ is x coordinates of the left and right lane line respectively, $(x_{left} + x_{right})/2$ means x coordiate of the lane center. $x_{vehicle}$ is x coordinate of the position of the vehicle, which is the same as x coordinate of the center of the image. 
+
+$$
+D_{center} = \frac{x_{left} + x_{right}}{2} - x_{vehicle}
+$$
+
+In default, the unit of output from `measure_curvature_and_position()` is pixel, but you can change it by `x_per_pix` and `y_per_pix`. In `measure_curvature_and_position_in_meters()`, I set meters per pixel to `x_per_pix` and `y_per_pix`, and get the radius of curvature and the position of the vehicle in meters.
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+This step is implemented in the sixth sub-section of "Pipeline" section of the IPython notebook in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `overlay_detected_lane()` first creates a polygon with points of left and right lanes, and projects the polygon to the undistorted road image by `cv2.perspectiveTransform()`. Then it draws the polygon with `cv2.fillPoly()` and overlays it to the undistorted road image by `cv2.addWeighted()`. Here is an example of my result on a test image:
 
 ![alt text][image6]
 
