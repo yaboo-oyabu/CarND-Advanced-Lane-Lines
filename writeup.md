@@ -70,17 +70,14 @@ This step is implemented in the forth sub-section of "Pipeline" section of the I
 
 This step is implemented in the fifth sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `measure_curvature_and_position()` returns the radius of curvature of the lane with `measure_curvature()`, and the position of the vehicle with respect to center with `measure_position()`. 
 
-`measure_curvature()` uses the following formula to calcute the radius of curvature $R_{curve}$. Here $A$ and $B$ are first and second order coefficients of the fitted lane line respectively, and $y$ is y coordinate of the vehicle in the image. Since the image is camera view, $y$ is set to the height of the image. 
+`measure_curvature()` uses the following formula to calcute the radius of curvature ![$R_{curve}$](https://latex.codecogs.com/gif.latex?R_{curve}). Here ![$A$](https://latex.codecogs.com/gif.latex?A) and ![$B$](https://latex.codecogs.com/gif.latex?B) are first and second order coefficients of the fitted lane line respectively, and ![$y$](https://latex.codecogs.com/gif.latex?y) is y coordinate of the vehicle in the image. Since the image is camera view, ![$y$](https://latex.codecogs.com/gif.latex?y) is set to the height of the image. 
 
-$$
-R_{curve} = \frac{(1 + (2Ay + B)^2)^{\frac{3}{2}}}{|2A|}
-$$
+![alt text](https://latex.codecogs.com/gif.latex?R_{curve}&space;=&space;\frac{(1&space;&plus;&space;(2Ay&space;&plus;&space;B)^2)^{\frac{3}{2}}}{|2A|})
 
-`measure_position()` uses the following equation to calculate the the position of the vehicle with respect to center $D_{center}$. Here $x_{left}$ and $x_{right}$ is x coordinates of the left and right lane line respectively, $(x_{left} + x_{right})/2$ means x coordiate of the lane center. $x_{vehicle}$ is x coordinate of the position of the vehicle, which is the same as x coordinate of the center of the image. 
 
-$$
-D_{center} = \frac{x_{left} + x_{right}}{2} - x_{vehicle}
-$$
+`measure_position()` uses the following equation to calculate the the position of the vehicle with respect to center ![$D_{center}$](https://latex.codecogs.com/gif.latex?D_{center}). Here ![$x_{left}$](https://latex.codecogs.com/gif.latex?x_{left}) and ![$x_{right}$](https://latex.codecogs.com/gif.latex?x_{right}) is x coordinates of the left and right lane line respectively, ![$(x_{left} + x_{right})/2$](https://latex.codecogs.com/gif.latex?(x_{left}+x_{right})/2) means x coordiate of the lane center. ![$x_{vehicle}$](https://latex.codecogs.com/gif.latex?x_{vehicle}) is x coordinate of the position of the vehicle, which is the same as x coordinate of the center of the image. 
+
+![alt text](https://latex.codecogs.com/gif.latex?D_{center}&space;=&space;\frac{x_{left}&space;&plus;&space;x_{right}}{2}&space;-&space;x_{vehicle})
 
 In default, the unit of output from `measure_curvature_and_position()` is pixel, but you can change it by `x_per_pix` and `y_per_pix`. In `measure_curvature_and_position_in_meters()`, I set meters per pixel to `x_per_pix` and `y_per_pix`, and get the radius of curvature and the position of the vehicle in meters.
 
