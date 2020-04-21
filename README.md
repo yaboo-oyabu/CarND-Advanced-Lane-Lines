@@ -1,19 +1,4 @@
-## Advanced Lane Finding
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-![Lanes Image](./examples/example_output.jpg)
-
-In this project, your goal is to write a software pipeline to identify the lane boundaries in a video, but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
-
-Creating a great writeup:
----
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
-
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
-
-The Project
----
+**Advanced Lane Finding Project**
 
 The goals / steps of this project are the following:
 
@@ -26,14 +11,94 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-The images for camera calibration are stored in the folder called `camera_cal`.  The images in `test_images` are for testing your pipeline on single frames.  If you want to extract more test images from the videos, you can simply use an image writing method like `cv2.imwrite()`, i.e., you can read the video in frame by frame as usual, and for frames you want to save for later you can write to an image file.  
+[//]: # (Image References)
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `output_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+[imageC]: ./output_images/undistort_output_checkboard.png "Camera Calibration"
+[image1]: ./output_images/undistort_output_0.png "Undistortion"
+[image2]: ./output_images/binary_output_0.png "Binary Threshold"
+[image3]: ./output_images/ptransform_output_0.png "PTransform"
+[image4]: ./output_images/lane_output_0.png "Warp Example"
+[image6]: ./output_images/overlay_output_0.png "Fit Visual"
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
+### Camera Calibration
 
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
+#### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+The code for this step is contained in the first section of "Camera Calibration" of the IPython notebook located in "./P2.ipynb". There are two functions: `compute_camera_calibration()` and `apply_undistortion()`. `compute_camera_calibration()` estimates `camera_matrix` and `dist_coeffs` from chessboard images, and `apply_undistortion` undistors an input image with `cv2.undistort` which requires `camera_matrix` and `dist_coeffs`.
 
+In the above process, the estimatiion of `camera_matrix` and `dist_coeffs` is the most important because it determines the performance of undistortion. To estimate these parameters, `objpoints` and `imgpoints` are needed. `objpoints` is a list of `objp`, which is array of the (x, y, z) coordinates of the chessboard corners in the calibration pattern coordinate space. Here, z is set to 0 because I am assuming the chessboard is fixed on the (x, y) plane. `imgpoints` is a list of `imgp`, which is array of (x, y) coordinates of chessboard corners in chessboard images. Here, chessboard corners are detected by `cv2.findChessboardCorners()`. After preparing `objpoints` and `imgpoints`, I estimate `camera_matrix` and `dist_coeffs` with `cv2.calibrateCamera()`.
+
+The following image shows how a chessboard image is undistorted by `apply_undistortion()` with estimated `camera_matrix` and `dist_coeffs`:
+
+![alt text][imageC]
+
+### Pipeline (single images)
+#### 1. Provide an example of a distortion-corrected image.
+
+This step is implemented in the first sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". To demonstrate the distortion-correction step, I correct the distortion of the images which located in `test_images/straight_lines2.jpg`. I applied `apply_undistortion()` to this image and get the following result. In the follwing result, the left image is the input to `apply_undistortion()` and the right image is the output. You can see the red car in the right image is streched horizontally compared to the left.
+
+![alt_text][image1]
+
+#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+
+This step is implemented in the second sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `apply_binary_transformation_with_thresholds()` is used to create a thresholded binary image. I used a combination of gradient and color thresholds to generate a binary image. The gradient threshold is applied to the gray-scale image which is the output of `cv2.Sobel()`. This calculates x derivatives of an input image. The color threshold is applied to the HLS color image which is converted from an input image by `cv2.cvtColor()`. Here is an example of a thresholded binary image converted by `apply_binary_transformation_with_thresholds()`.
+
+![alt text][image2]
+
+#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+
+This step is implemented in the third sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `apply_perspective_transform()` is used to apply a perspective transform to an input image. This function takes a transform matrix which is calculated by `calculate_perspective_transform_matrix()`. To obtain a transform matrix, I used `cv2.getPerspectiveTransform()` and input source (`src`) and destination (`dst`) points to that function. I chose the hardcode the source and destination points as follows.
+
+| Source        | Destination   | 
+|:-------------:|:-------------:| 
+| 203, 720      | 320, 0        | 
+| 581, 460      | 320, 720      |
+| 703, 460      | 960, 720      |
+| 1110, 720     | 960, 0        |
+
+I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+
+![alt text][image3]
+
+#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+
+This step is implemented in the forth sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `fit_polynomial` takes left points (`leftx` and `lefty`) and right points (`rightx` and `righty`) to estimate second order polynomials for left and right lane. These points are extracted by `find_lane_pixels()` which has important steps to separate left and right points without outliars. In the first step, I calculate `midpoint` of the lane based on left and right peaks of the `histogram`, and use it to split points to left and right groups. Then, outliars are removed from each group by using sliding window technique. Since this function is slow due to it's computational complexity, I also define `search_around_poly()` which reuse previously calcuated coefficients of second order polynomials to reduce the computational complexity for the extraction of left and right points. 
+
+![alt text][image4]
+
+#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
+
+This step is implemented in the fifth sub-section of "Pipeline" section of the IPython notebook located in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `measure_curvature_and_position()` returns the radius of curvature of the lane with `measure_curvature()`, and the position of the vehicle with respect to center with `measure_position()`. 
+
+`measure_curvature()` uses the following formula to calcute the radius of curvature ![$R_{curve}$](https://latex.codecogs.com/gif.latex?R_{curve}). Here ![$A$](https://latex.codecogs.com/gif.latex?A) and ![$B$](https://latex.codecogs.com/gif.latex?B) are first and second order coefficients of the fitted lane line respectively, and ![$y$](https://latex.codecogs.com/gif.latex?y) is y coordinate of the vehicle in the image. Since the image is camera view, ![$y$](https://latex.codecogs.com/gif.latex?y) is set to the height of the image. 
+
+![alt text](https://latex.codecogs.com/gif.latex?R_{curve}&space;=&space;\frac{(1&space;&plus;&space;(2Ay&space;&plus;&space;B)^2)^{\frac{3}{2}}}{|2A|})
+
+
+`measure_position()` uses the following equation to calculate the the position of the vehicle with respect to center ![$D_{center}$](https://latex.codecogs.com/gif.latex?D_{center}). Here ![$x_{left}$](https://latex.codecogs.com/gif.latex?x_{left}) and ![$x_{right}$](https://latex.codecogs.com/gif.latex?x_{right}) is x coordinates of the left and right lane line respectively, ![$(x_{left} + x_{right})/2$](https://latex.codecogs.com/gif.latex?(x_{left}+x_{right})/2) means x coordiate of the lane center. ![$x_{vehicle}$](https://latex.codecogs.com/gif.latex?x_{vehicle}) is x coordinate of the position of the vehicle, which is the same as x coordinate of the center of the image. 
+
+![alt text](https://latex.codecogs.com/gif.latex?D_{center}&space;=&space;\frac{x_{left}&space;&plus;&space;x_{right}}{2}&space;-&space;x_{vehicle})
+
+In default, the unit of output from `measure_curvature_and_position()` is pixel, but you can change it by `x_per_pix` and `y_per_pix`. In `measure_curvature_and_position_in_meters()`, I set meters per pixel to `x_per_pix` and `y_per_pix`, and get the radius of curvature and the position of the vehicle in meters.
+
+#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+
+This step is implemented in the sixth sub-section of "Pipeline" section of the IPython notebook in "./CarND_Advanced_Lane_Lines.ipynb". In this step, `overlay_detected_lane()` first creates a polygon with points of left and right lanes, and projects the polygon to the undistorted road image by `cv2.perspectiveTransform()`. Then it draws the polygon with `cv2.fillPoly()` and overlays it to the undistorted road image by `cv2.addWeighted()`. Here is an example of my result on a test image:
+
+![alt text][image6]
+
+---
+
+### Pipeline (video)
+
+#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+
+Here's a [link to my video result](./output_videos/project_video.mp4)
+
+---
+
+### Discussion
+
+#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+
+In my pipeline, I found a problem in the second step which creates thresholded binary images. This step works very well for "project_video.mp4", but poorly works for "challenge_video.mp4". In "challenge_video.mp4", the color of lanes are different from ones in "project_video.mp4", so color filter can't extract lanes well. In addition, the Sobel filter also doesn't work well because it sensitively reacts to the shadow created by the wall on the left, which is shown also in "challenge_video.mp4". I had some trails and errors to change the step2 so that it can work on any scenes including "challenge_video.mp4". However, I realized this step is too manual and requires much time to invest on creating new rules to handle it. So, I think it's necessary to blend rule based approach and machine learning based approach to execute more robust lane detection in several different scenes.
